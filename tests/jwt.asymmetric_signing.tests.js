@@ -26,7 +26,7 @@ var algorithms = {
   }
 };
 
-describe('Asymmetric Algorithms', function(){
+describe.only('Asymmetric Algorithms', function(){
 
   Object.keys(algorithms).forEach(function (algorithm) {
     describe(algorithm, function () {

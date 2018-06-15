@@ -1,9 +1,8 @@
 var jwt = require('../');
+var fs = require('fs');
 
 describe('issue 70 - public key start with BEING PUBLIC KEY', function () {
-
   it('should work', function (done) {
-    var fs = require('fs');
     var cert_pub = fs.readFileSync(__dirname + '/rsa-public.pem');
     var cert_priv = fs.readFileSync(__dirname + '/rsa-private.pem');
 
@@ -11,5 +10,4 @@ describe('issue 70 - public key start with BEING PUBLIC KEY', function () {
 
     jwt.verify(token, cert_pub, done);
   });
-
 });
