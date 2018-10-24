@@ -51,20 +51,4 @@ describe('schema', function() {
       sign({noTimestamp: true});
     });
   });
-
-  describe('sign payload registered claims', function() {
-
-    function sign(payload) {
-      jwt.sign(payload, 'foo123');
-    }
-
-    it('should validate exp', function () {
-      expect(function () {
-        sign({ exp: '1 monkey' });
-      }).to.throw(/"exp" should be a number of seconds/);
-      sign({ exp: 10.1 });
-    });
-
-  });
-
 });

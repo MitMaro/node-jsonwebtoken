@@ -293,7 +293,7 @@ describe('expires', function() {
     it('should verify "exp" using "clockTolerance"', function (done) {
       signWithExpiresIn(5, {}, (e1, token) => {
         fakeClock.tick(10000);
-        testUtils.verifyJWTHelper(token, undefined, {clockTimestamp: 6}, (e2, decoded) => {
+        testUtils.verifyJWTHelper(token, undefined, {clockTolerance: 6}, (e2, decoded) => {
           testUtils.asyncCheck(done, () => {
             expect(e1).to.be.null;
             expect(e2).to.be.null;
@@ -324,6 +324,8 @@ describe('expires', function() {
             expect(e1).to.be.null;
             expect(e2).to.be.instanceOf(jwt.TokenExpiredError);
             expect(e2).to.have.property('message', 'jwt expired');
+            expect(e2).to.have.property('expiredAt').to.be.instanceOf(Date);
+            expect(e2.expiredAt.getTime()).to.equal(60000);
           });
         });
       });
@@ -336,6 +338,8 @@ describe('expires', function() {
             expect(e1).to.be.null;
             expect(e2).to.be.instanceOf(jwt.TokenExpiredError);
             expect(e2).to.have.property('message', 'jwt expired');
+            expect(e2).to.have.property('expiredAt').to.be.instanceOf(Date);
+            expect(e2.expiredAt.getTime()).to.equal(55000);
           });
         });
       });

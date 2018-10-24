@@ -2,7 +2,6 @@ var jwt = require('../index');
 var jws = require('jws');
 var fs = require('fs');
 var path = require('path');
-var sinon = require('sinon');
 var JsonWebTokenError = require('../lib/JsonWebTokenError');
 
 var assert = require('chai').assert;
@@ -154,84 +153,14 @@ describe('verify', function() {
   });
 
   describe('expiration', function () {
-    // { foo: 'bar', iat: 1437018582, exp: 1437018592 }
-    var token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIiLCJpYXQiOjE0MzcwMTg1ODIsImV4cCI6MTQzNzAxODU5Mn0.3aR3vocmgRpG05rsI9MpR6z2T_BGtMQaPq2YR6QaroU';
     var key = 'key';
-
-    var clock;
-    afterEach(function () {
-      try { clock.restore(); } catch (e) {}
-    });
-
-    it('should error on expired token', function (done) {
-      clock = sinon.useFakeTimers(1437018650000); // iat + 58s, exp + 48s
-      var options = {algorithms: ['HS256']};
-
-      jwt.verify(token, key, options, function (err, p) {
-        assert.equal(err.name, 'TokenExpiredError');
-        assert.equal(err.message, 'jwt expired');
-        assert.equal(err.expiredAt.constructor.name, 'Date');
-        assert.equal(Number(err.expiredAt), 1437018592000);
-        assert.isUndefined(p);
-        done();
-      });
-    });
-
-    it('should not error on expired token within clockTolerance interval', function (done) {
-      clock = sinon.useFakeTimers(1437018594000); // iat + 12s, exp + 2s
-      var options = {algorithms: ['HS256'], clockTolerance: 5 }
-
-      jwt.verify(token, key, options, function (err, p) {
-        assert.isNull(err);
-        assert.equal(p.foo, 'bar');
-        done();
-      });
-    });
-
     describe('option: clockTimestamp', function () {
       var clockTimestamp = 1000000000;
-      it('should verify unexpired token relative to user-provided clockTimestamp', function (done) {
-        var token = jwt.sign({foo: 'bar', iat: clockTimestamp, exp: clockTimestamp + 1}, key);
-        jwt.verify(token, key, {clockTimestamp: clockTimestamp}, function (err) {
-          assert.isNull(err);
-          done();
-        });
-      });
-      it('should error on expired token relative to user-provided clockTimestamp', function (done) {
-        var token = jwt.sign({foo: 'bar', iat: clockTimestamp, exp: clockTimestamp + 1}, key);
-        jwt.verify(token, key, {clockTimestamp: clockTimestamp + 1}, function (err, p) {
-          assert.equal(err.name, 'TokenExpiredError');
-          assert.equal(err.message, 'jwt expired');
-          assert.equal(err.expiredAt.constructor.name, 'Date');
-          assert.equal(Number(err.expiredAt), (clockTimestamp + 1) * 1000);
-          assert.isUndefined(p);
-          done();
-        });
-      });
       it('should verify clockTimestamp is a number', function (done) {
         var token = jwt.sign({foo: 'bar', iat: clockTimestamp, exp: clockTimestamp + 1}, key);
         jwt.verify(token, key, {clockTimestamp: 'notANumber'}, function (err, p) {
           assert.equal(err.name, 'JsonWebTokenError');
           assert.equal(err.message,'clockTimestamp must be a number');
-          assert.isUndefined(p);
-          done();
-        });
-      });
-    });
-
-    describe('option: maxAge and clockTimestamp', function () {
-      // { foo: 'bar', iat: 1437018582, exp: 1437018800 } exp = iat + 218s
-      var token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIiLCJpYXQiOjE0MzcwMTg1ODIsImV4cCI6MTQzNzAxODgwMH0.AVOsNC7TiT-XVSpCpkwB1240izzCIJ33Lp07gjnXVpA';
-      it('cannot be more permissive than expiration', function (done) {
-        var clockTimestamp = 1437018900;  // iat + 318s (exp: iat + 218s)
-        var options = {algorithms: ['HS256'], clockTimestamp: clockTimestamp, maxAge: '1000y'};
-
-        jwt.verify(token, key, options, function (err, p) {
-          // maxAge not exceded, but still expired
-          assert.equal(err.name, 'TokenExpiredError');
-          assert.equal(err.message, 'jwt expired');
-          assert.equal(err.expiredAt.constructor.name, 'Date');
-          assert.equal(Number(err.expiredAt), 1437018800000);
           assert.isUndefined(p);
           done();
         });

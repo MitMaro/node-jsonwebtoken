@@ -1,0 +1,118 @@
+- cleanup errors, inner not used
+
+- once on sign callback swallows error
+
+- Empty String in audience
+- Empty String in aud
+- aud doesn't have any validation on sign
+- aud doesn't have any validation on verify
+- aud should be valid URI if `:` present
+- Audience with array of different values are not validated
+- audience has different error when aud in payload compared to nbf/exp
+- add debug
+
+- subject options allows empty string
+- nbf/not Before conflict has different error output from other conflicts
+- sub claim does not have validation
+- no sub validation on verify, including URI check
+- no validation on subject option in verify
+- subject validation could use Regex/array of values
+
+- iat does not fail on sign with Infinity/NaN
+- add issueAt option like other date related options
+- move iat validation in verify outside of maxAge
+- maxAge validation should occur before getting inside the option
+- maxAge allows negative numbers?
+- maxAge works with Infinity and NaN
+- maxAge skips validation on 0
+
+- jwtid not documented for verify
+
+- should negative number for iat/exp/nbf fail validation?
+
+- kid header conflict with keyid validation
+
+-  with with in description
+
+[
+  true,
+  false,
+  null,
+  undefined,
+  -1,
+  0,
+  1,
+  -1.1,
+  1.1,
+  -Infinity,
+  Infinity,
+  NaN,
+  '',
+  'invalid',
+  [],
+  ['foo'],
+  {},
+  {foo: 'bar'},
+]
+
+
+
+describe.only('`jwt.sign` "aud" claim validation', function () {
+  [
+    true,
+    false,
+    null,
+    undefined,
+    -1,
+    0,
+    1,
+    -1.1,
+    1.1,
+    -Infinity,
+    Infinity,
+    NaN,
+    '',
+    [],
+    ['foo'],
+    {},
+    {foo: 'bar'},
+  ].forEach((aud) => {
+    it(`should error with with value ${util.inspect(aud)}`, function () {
+      expect(() => signWithAudience({aud})).to.throw(
+        '"aud" should be a number of seconds'
+      );
+    });
+  });
+});
+describe.only('"aud" in payload validation', function () {
+  [
+    true,
+    false,
+    null,
+    undefined,
+    -1,
+    0,
+    1,
+    -1.1,
+    1.1,
+    -Infinity,
+    Infinity,
+    NaN,
+    '',
+    'invalid',
+    [],
+    ['foo'],
+    {},
+    {foo: 'bar'},
+  ].forEach((aud) => {
+    it(`should error with with value ${util.inspect(aud)}`, function () {
+      const encodedPayload = base64UrlEncode(JSON.stringify({aud}));
+      const token = `${noneAlgorithmHeader}.${encodedPayload}.`;
+      expect(() => jwt.verify(token)).to.throw(
+        jwt.JsonWebTokenError,
+        'invalid nbf value'
+      );
+    });
+  })
+});
+
